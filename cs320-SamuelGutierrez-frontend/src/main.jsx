@@ -1,9 +1,9 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
-import './index.css'
+import '../styles/index.css'
 import Navbar from './Navbar.jsx'
-import App from './App.jsx'
+import Home from './Home.jsx'
 import Timeline from './Timeline.jsx'
 import Memories from './Memories.jsx'
 import LoveNotes from './LoveNotes.jsx'
@@ -13,7 +13,7 @@ createRoot(document.getElementById('root')).render(
     <BrowserRouter>
       <Navbar />
       <Routes>
-        <Route path="/" element={<App />} />
+        <Route path="/" element={<Home />} />
         <Route path="/timeline" element={<Timeline />} />
         <Route path="/memories" element={<Memories />} />
         <Route path="/lovenotes" element={<LoveNotes />} />
