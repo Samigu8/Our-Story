@@ -1,4 +1,5 @@
 import {useEffect, useState} from 'react';
+import { API_URL } from './config';
 
 function Test() {
     const [people, setPeople] = useState([]);
@@ -9,7 +10,7 @@ function Test() {
     }, []);
 
     const fetchPeople = async () => {
-        const response = await fetch('http://localhost:8080/person');
+        const response = await fetch(`${API_URL}/person`);
         const data = await response.json();
         setPeople(data);
     };
@@ -17,7 +18,7 @@ function Test() {
     const handleSubmitName = (e) => {
         e.preventDefault();
         const submitName = async () => {
-            const response = await fetch('http://localhost:8080/person', {
+            const response = await fetch(`${API_URL}/person`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
