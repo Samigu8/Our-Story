@@ -60,11 +60,26 @@ const Home = () => {
       {/* Hero Section */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
         <div className="bg-gradient-to-br from-pink-200 via-purple-200 to-blue-200 rounded-2xl sm:rounded-3xl overflow-hidden shadow-lg mb-8 sm:mb-12">
-          <div className="aspect-[16/10] sm:aspect-[21/9] flex items-center justify-center">
-            <div className="text-center text-white">
-              <Heart className="w-16 h-16 sm:w-24 sm:h-24 mx-auto mb-3 sm:mb-4 opacity-60" />
-              <p className="text-base sm:text-xl opacity-80">Hero Image Placeholder</p>
-              <p className="text-sm opacity-60">(Couple Photo)</p>
+          <div className="relative aspect-[16/10] sm:aspect-[21/9] flex items-center justify-center">
+            <video
+              className="w-full h-full object-cover"
+              autoPlay
+              muted
+              loop
+              playsInline
+              preload="metadata"
+            >
+              <source src="/Untitled.mp4" type="video/mp4" />
+              Your browser does not support the video tag.
+            </video>
+
+            <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-black/10 to-black/25" />
+
+            <div className="absolute inset-0 flex items-end sm:items-center justify-center p-5 sm:p-8 text-center">
+              <div className="max-w-2xl text-white">
+                <h2 className="text-xl sm:text-4xl font-semibold mb-1 sm:mb-3">Our Love Story</h2>
+                <p className="text-xs sm:text-base text-white/90">A highlight reel of the moments we keep forever.</p>
+              </div>
             </div>
           </div>
         </div>
