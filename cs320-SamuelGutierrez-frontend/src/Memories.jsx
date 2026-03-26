@@ -151,11 +151,11 @@ export default function Memories() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-pink-50 via-purple-50 to-blue-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
         {/* Page Header */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl text-gray-800 mb-4">Our Memories</h1>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto mb-8">
+          <h1 className="text-3xl sm:text-4xl text-gray-800 mb-4">Our Memories</h1>
+          <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto mb-8">
             A collection of beautiful moments captured through our journey together
           </p>
           
@@ -165,7 +165,7 @@ export default function Memories() {
               setIsUploading(true);
               setStatusMessage('');
             }}
-            className="inline-flex items-center gap-2 bg-gradient-to-r from-pink-500 to-purple-500 text-white px-8 py-3 rounded-full hover:from-pink-600 hover:to-purple-600 transition-all hover:shadow-lg hover:-translate-y-0.5"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-gradient-to-r from-pink-500 to-purple-500 text-white px-8 py-3 rounded-full hover:from-pink-600 hover:to-purple-600 transition-all hover:shadow-lg hover:-translate-y-0.5"
           >
             <Upload className="w-5 h-5" />
             Upload New Photo
@@ -175,8 +175,8 @@ export default function Memories() {
         {statusMessage && <p className="text-center mb-6 text-gray-700" role="status">{statusMessage}</p>}
 
         {isUploading && (
-          <form onSubmit={submitPhoto} className="bg-white rounded-2xl p-6 shadow-md mb-8 max-w-3xl mx-auto">
-            <h2 className="text-2xl text-gray-800 mb-4">Upload Memory</h2>
+          <form onSubmit={submitPhoto} className="bg-white rounded-2xl p-4 sm:p-6 shadow-md mb-8 max-w-3xl mx-auto">
+            <h2 className="text-xl sm:text-2xl text-gray-800 mb-4">Upload Memory</h2>
 
             <label className="text-gray-700">
               Caption
@@ -208,15 +208,15 @@ export default function Memories() {
             </label>
             {formErrors.imageUrl && <p className="text-red-600 mt-1" role="alert">{formErrors.imageUrl}</p>}
 
-            <div className="mt-5 flex gap-3">
-              <button type="submit" className="bg-pink-500 text-white px-5 py-2 rounded-full hover:bg-pink-600">Upload</button>
+            <div className="mt-5 flex flex-col sm:flex-row gap-3">
+              <button type="submit" className="w-full sm:w-auto bg-pink-500 text-white px-5 py-2 rounded-full hover:bg-pink-600">Upload</button>
               <button
                 type="button"
                 onClick={() => {
                   setIsUploading(false);
                   setFormErrors({});
                 }}
-                className="inline-flex items-center gap-2 bg-gray-200 text-gray-700 px-5 py-2 rounded-full hover:bg-gray-300"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-gray-200 text-gray-700 px-5 py-2 rounded-full hover:bg-gray-300"
               >
                 <X className="w-4 h-4" />
                 Cancel

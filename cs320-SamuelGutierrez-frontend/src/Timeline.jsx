@@ -203,15 +203,15 @@ export default function Timeline() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-pink-50 via-purple-50 to-blue-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
         {/* Page Header */}
-        <div className="text-center mb-12">
-          <h1 className="text-4xl text-gray-800 mb-4">Our Timeline</h1>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+        <div className="text-center mb-8 sm:mb-12">
+          <h1 className="text-3xl sm:text-4xl text-gray-800 mb-4">Our Timeline</h1>
+          <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto">
             A chronological journey through all the special moments we've shared
           </p>
           <button
-            className="mt-6 inline-flex items-center gap-2 bg-gradient-to-r from-pink-500 to-purple-500 text-white px-8 py-3 rounded-full hover:from-pink-600 hover:to-purple-600 transition-all hover:shadow-lg hover:-translate-y-0.5"
+            className="mt-6 w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-gradient-to-r from-pink-500 to-purple-500 text-white px-8 py-3 rounded-full hover:from-pink-600 hover:to-purple-600 transition-all hover:shadow-lg hover:-translate-y-0.5"
             onClick={startCreate}
           >
             <Plus className="w-5 h-5" />
@@ -222,8 +222,8 @@ export default function Timeline() {
         {statusMessage && <p className="text-center mb-6 text-gray-700" role="status">{statusMessage}</p>}
 
         {showForm && (
-          <form onSubmit={submitForm} className="bg-white rounded-2xl p-6 shadow-md mb-8 max-w-3xl mx-auto">
-            <h2 className="text-2xl text-gray-800 mb-4">{editingId !== null ? 'Edit Timeline Event' : 'New Timeline Event'}</h2>
+          <form onSubmit={submitForm} className="bg-white rounded-2xl p-4 sm:p-6 shadow-md mb-8 max-w-3xl mx-auto">
+            <h2 className="text-xl sm:text-2xl text-gray-800 mb-4">{editingId !== null ? 'Edit Timeline Event' : 'New Timeline Event'}</h2>
             <div className="grid gap-4">
               <label className="text-gray-700">
                 Title
@@ -262,12 +262,12 @@ export default function Timeline() {
               {formErrors.description && <p className="text-red-600" role="alert">{formErrors.description}</p>}
             </div>
 
-            <div className="mt-5 flex gap-3">
-              <button type="submit" className="inline-flex items-center gap-2 bg-blue-500 text-white px-5 py-2 rounded-full hover:bg-blue-600">
+            <div className="mt-5 flex flex-col sm:flex-row gap-3">
+              <button type="submit" className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-blue-500 text-white px-5 py-2 rounded-full hover:bg-blue-600">
                 <Save className="w-4 h-4" />
                 Save
               </button>
-              <button type="button" onClick={cancelForm} className="inline-flex items-center gap-2 bg-gray-200 text-gray-700 px-5 py-2 rounded-full hover:bg-gray-300">
+              <button type="button" onClick={cancelForm} className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-gray-200 text-gray-700 px-5 py-2 rounded-full hover:bg-gray-300">
                 <X className="w-4 h-4" />
                 Cancel
               </button>
