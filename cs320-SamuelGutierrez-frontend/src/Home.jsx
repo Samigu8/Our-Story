@@ -1,7 +1,60 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Calendar, Image, Heart } from 'lucide-react';
+import { API_URL } from './config';
 
 const Home = () => {
+  const [counts, setCounts] = useState({
+    timeline: null,
+    memories: null,
+    loveNotes: null,
+  });
+
+  useEffect(() => {
+    const fetchCount = async (endpoint) => {
+      const response = await fetch(`${API_URL}${endpoint}`);
+      if (!response.ok) {
+        throw new Error('Count request failed');
+      }
+      const data = await response.json();
+      return Array.isArray(data) ? data.length : 0;
+    };
+
+    const loadCounts = async () => {
+      try {
+        const [timelineCount, memoriesCount, loveNotesCount] = await Promise.all([
+          fetchCount('/timeline'),
+          fetchCount('/memories/photos'),
+          fetchCount('/lovenotes'),
+        ]);
+
+        setCounts({
+          timeline: timelineCount,
+          memories: memoriesCount,
+          loveNotes: loveNotesCount,
+        });
+      } catch {
+        setCounts({
+          timeline: null,
+          memories: null,
+          loveNotes: null,
+        });
+      }
+    };
+
+    loadCounts();
+  }, []);
+
+  const formatCount = (value, noun) => {
+    if (value === null) {
+      return 'Unavailable';
+    }
+    if (value === 1) {
+      return `1 ${noun}`;
+    }
+    return `${value} ${noun}s`;
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-pink-50 via-purple-50 to-blue-50">
       {/* Hero Section */}
@@ -38,6 +91,7 @@ const Home = () => {
                 <Calendar className="w-10 h-10 text-white" />
               </div>
               <h3 className="text-2xl mb-3 text-gray-800">Timeline</h3>
+              <p className="text-sm font-medium text-pink-600 mb-2">{formatCount(counts.timeline, 'event')}</p>
               <p className="text-gray-600">
                 Explore our journey through time and relive special moments together
               </p>
@@ -53,6 +107,7 @@ const Home = () => {
                 <Image className="w-10 h-10 text-white" />
               </div>
               <h3 className="text-2xl mb-3 text-gray-800">Memories</h3>
+              <p className="text-sm font-medium text-purple-600 mb-2">{formatCount(counts.memories, 'photo')}</p>
               <p className="text-gray-600">
                 Browse through our beautiful photo gallery and cherished memories
               </p>
@@ -68,6 +123,7 @@ const Home = () => {
                 <Heart className="w-10 h-10 text-white" />
               </div>
               <h3 className="text-2xl mb-3 text-gray-800">Love Notes</h3>
+              <p className="text-sm font-medium text-blue-600 mb-2">{formatCount(counts.loveNotes, 'note')}</p>
               <p className="text-gray-600">
                 Sweet messages and notes we've shared with each other
               </p>

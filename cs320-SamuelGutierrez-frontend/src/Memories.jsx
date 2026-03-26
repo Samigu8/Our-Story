@@ -1,6 +1,8 @@
-import { Upload, Image as ImageIcon } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Upload, Image as ImageIcon, Trash2, X } from 'lucide-react';
+import { API_URL } from './config';
 
-function PhotoTile({ caption, index }) {
+function PhotoTile({ photo, index, onDelete }) {
   const gradients = [
     'from-pink-300 to-rose-300',
     'from-purple-300 to-indigo-300',
@@ -12,6 +14,14 @@ function PhotoTile({ caption, index }) {
 
   return (
     <div className="group relative bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all hover:-translate-y-1 duration-300">
+      <button
+        onClick={() => onDelete(photo.id)}
+        className="absolute top-3 right-3 z-10 p-2 rounded-full bg-white/80 hover:bg-white text-red-500 transition-colors"
+        aria-label={`Delete ${photo.caption}`}
+      >
+        <Trash2 className="w-4 h-4" />
+      </button>
+
       {/* Image Placeholder */}
       <div className={`aspect-square bg-gradient-to-br ${gradients[index % gradients.length]} flex items-center justify-center`}>
         <ImageIcon className="w-16 h-16 text-white opacity-60" />
@@ -19,32 +29,125 @@ function PhotoTile({ caption, index }) {
       
       {/* Caption Overlay */}
       <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4 opacity-0 group-hover:opacity-100 transition-opacity">
-        <p className="text-white text-sm">{caption}</p>
+        <p className="text-white text-sm">{photo.caption}</p>
       </div>
       
       {/* Caption Below (visible on mobile) */}
       <div className="p-3 md:hidden">
-        <p className="text-gray-600 text-sm">{caption}</p>
+        <p className="text-gray-600 text-sm">{photo.caption}</p>
       </div>
     </div>
   );
 }
 
 export default function Memories() {
-  const photos = [
-    { caption: "Sunset at the beach during our first vacation together" },
-    { caption: "Coffee date where we first met and fell in love" },
-    { caption: "Cozy winter evening by the fireplace" },
-    { caption: "Hiking adventure in the mountains" },
-    { caption: "Celebrating our first anniversary" },
-    { caption: "Dancing under the stars at the summer festival" },
-    { caption: "Cooking together in our new home" },
-    { caption: "Road trip memories and scenic views" },
-    { caption: "Laughing together at the amusement park" },
-    { caption: "Quiet moment reading books on a lazy Sunday" },
-    { caption: "Our families meeting for the first time" },
-    { caption: "Spontaneous picnic in the park" },
-  ];
+  const [photos, setPhotos] = useState([]);
+  const [isUploading, setIsUploading] = useState(false);
+  const [statusMessage, setStatusMessage] = useState('');
+  const [formErrors, setFormErrors] = useState({});
+  const [form, setForm] = useState({ caption: '', imageUrl: '' });
+
+  useEffect(() => {
+    fetchPhotos();
+  }, []);
+
+  const fetchPhotos = async () => {
+    try {
+      const response = await fetch(`${API_URL}/memories/photos`);
+      if (!response.ok) {
+        setStatusMessage('Unable to load memories right now.');
+        return;
+      }
+      const data = await response.json();
+      setPhotos(Array.isArray(data) ? data : []);
+    } catch {
+      setStatusMessage('Unable to load memories right now. Please try again.');
+    }
+  };
+
+  const validateForm = () => {
+    const errors = {};
+    const caption = form.caption.trim();
+    const imageUrl = form.imageUrl.trim();
+
+    if (!caption) {
+      errors.caption = 'Caption is required.';
+    } else if (caption.length > 240) {
+      errors.caption = 'Caption must be 240 characters or fewer.';
+    }
+
+    if (imageUrl && imageUrl.length > 300) {
+      errors.imageUrl = 'Image URL must be 300 characters or fewer.';
+    }
+
+    return errors;
+  };
+
+  const parseMessage = async (response, fallback) => {
+    try {
+      const payload = await response.json();
+      if (payload?.errors && typeof payload.errors === 'object') {
+        setFormErrors(payload.errors);
+      }
+      if (payload?.message) {
+        return payload.message;
+      }
+    } catch {
+      // Keep fallback for non-JSON responses.
+    }
+    return fallback;
+  };
+
+  const submitPhoto = async (event) => {
+    event.preventDefault();
+    const errors = validateForm();
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
+      setStatusMessage('Please correct the form before uploading.');
+      return;
+    }
+
+    try {
+      const response = await fetch(`${API_URL}/memories/photos`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          caption: form.caption.trim(),
+          imageUrl: form.imageUrl.trim(),
+        }),
+      });
+
+      if (!response.ok) {
+        const message = await parseMessage(response, 'Unable to upload photo.');
+        setStatusMessage(message);
+        return;
+      }
+
+      setForm({ caption: '', imageUrl: '' });
+      setFormErrors({});
+      setIsUploading(false);
+      await fetchPhotos();
+      setStatusMessage('Photo uploaded.');
+    } catch {
+      setStatusMessage('Unable to upload photo right now. Please try again.');
+    }
+  };
+
+  const deletePhoto = async (id) => {
+    try {
+      const response = await fetch(`${API_URL}/memories/photos/${id}`, { method: 'DELETE' });
+      if (!response.ok) {
+        const message = await parseMessage(response, 'Unable to delete photo.');
+        setStatusMessage(message);
+        return;
+      }
+
+      setPhotos((prev) => prev.filter((photo) => photo.id !== id));
+      setStatusMessage('Photo deleted.');
+    } catch {
+      setStatusMessage('Unable to delete photo right now.');
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-pink-50 via-purple-50 to-blue-50">
@@ -57,16 +160,75 @@ export default function Memories() {
           </p>
           
           {/* Upload Button */}
-          <button className="inline-flex items-center gap-2 bg-gradient-to-r from-pink-500 to-purple-500 text-white px-8 py-3 rounded-full hover:from-pink-600 hover:to-purple-600 transition-all hover:shadow-lg hover:-translate-y-0.5">
+          <button
+            onClick={() => {
+              setIsUploading(true);
+              setStatusMessage('');
+            }}
+            className="inline-flex items-center gap-2 bg-gradient-to-r from-pink-500 to-purple-500 text-white px-8 py-3 rounded-full hover:from-pink-600 hover:to-purple-600 transition-all hover:shadow-lg hover:-translate-y-0.5"
+          >
             <Upload className="w-5 h-5" />
             Upload New Photo
           </button>
         </div>
 
+        {statusMessage && <p className="text-center mb-6 text-gray-700" role="status">{statusMessage}</p>}
+
+        {isUploading && (
+          <form onSubmit={submitPhoto} className="bg-white rounded-2xl p-6 shadow-md mb-8 max-w-3xl mx-auto">
+            <h2 className="text-2xl text-gray-800 mb-4">Upload Memory</h2>
+
+            <label className="text-gray-700">
+              Caption
+              <textarea
+                className="mt-1 w-full rounded-xl border border-gray-300 p-3"
+                rows="3"
+                value={form.caption}
+                onChange={(e) => {
+                  setForm((prev) => ({ ...prev, caption: e.target.value }));
+                  setFormErrors((prev) => ({ ...prev, caption: '' }));
+                }}
+                placeholder="Describe the moment"
+              />
+            </label>
+            {formErrors.caption && <p className="text-red-600 mt-1" role="alert">{formErrors.caption}</p>}
+
+            <label className="text-gray-700 block mt-4">
+              Image URL (optional)
+              <input
+                className="mt-1 w-full rounded-xl border border-gray-300 p-3"
+                type="text"
+                value={form.imageUrl}
+                onChange={(e) => {
+                  setForm((prev) => ({ ...prev, imageUrl: e.target.value }));
+                  setFormErrors((prev) => ({ ...prev, imageUrl: '' }));
+                }}
+                placeholder="https://example.com/photo.jpg"
+              />
+            </label>
+            {formErrors.imageUrl && <p className="text-red-600 mt-1" role="alert">{formErrors.imageUrl}</p>}
+
+            <div className="mt-5 flex gap-3">
+              <button type="submit" className="bg-pink-500 text-white px-5 py-2 rounded-full hover:bg-pink-600">Upload</button>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsUploading(false);
+                  setFormErrors({});
+                }}
+                className="inline-flex items-center gap-2 bg-gray-200 text-gray-700 px-5 py-2 rounded-full hover:bg-gray-300"
+              >
+                <X className="w-4 h-4" />
+                Cancel
+              </button>
+            </div>
+          </form>
+        )}
+
         {/* Photo Gallery Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {photos.map((photo, index) => (
-            <PhotoTile key={index} caption={photo.caption} index={index} />
+            <PhotoTile key={photo.id} photo={photo} index={index} onDelete={deletePhoto} />
           ))}
         </div>
       </div>
