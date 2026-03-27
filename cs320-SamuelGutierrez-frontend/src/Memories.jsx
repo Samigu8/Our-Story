@@ -70,13 +70,13 @@ export default function Memories() {
     const caption = form.caption.trim();
     const imageUrl = form.imageUrl.trim();
 
-    if (!caption) {
-      errors.caption = 'Caption is required.';
-    } else if (caption.length > 240) {
+    if (caption.length > 240) {
       errors.caption = 'Caption must be 240 characters or fewer.';
     }
 
-    if (imageUrl && imageUrl.length > 300) {
+    if (!imageUrl) {
+      errors.imageUrl = 'Image URL is required.';
+    } else if (imageUrl.length > 300) {
       errors.imageUrl = 'Image URL must be 300 characters or fewer.';
     }
 
@@ -179,7 +179,7 @@ export default function Memories() {
             <h2 className="text-xl sm:text-2xl text-gray-800 mb-4">Upload Memory</h2>
 
             <label className="text-gray-700">
-              Caption
+              Caption (optional)
               <textarea
                 className="mt-1 w-full rounded-xl border border-gray-300 p-3"
                 rows="3"
@@ -188,13 +188,13 @@ export default function Memories() {
                   setForm((prev) => ({ ...prev, caption: e.target.value }));
                   setFormErrors((prev) => ({ ...prev, caption: '' }));
                 }}
-                placeholder="Describe the moment"
+                placeholder="Optional: describe the moment"
               />
             </label>
             {formErrors.caption && <p className="text-red-600 mt-1" role="alert">{formErrors.caption}</p>}
 
             <label className="text-gray-700 block mt-4">
-              Image URL (optional)
+              Image URL
               <input
                 className="mt-1 w-full rounded-xl border border-gray-300 p-3"
                 type="text"
@@ -203,7 +203,7 @@ export default function Memories() {
                   setForm((prev) => ({ ...prev, imageUrl: e.target.value }));
                   setFormErrors((prev) => ({ ...prev, imageUrl: '' }));
                 }}
-                placeholder="https://example.com/photo.jpg"
+                placeholder="Required: https://example.com/photo.jpg"
               />
             </label>
             {formErrors.imageUrl && <p className="text-red-600 mt-1" role="alert">{formErrors.imageUrl}</p>}

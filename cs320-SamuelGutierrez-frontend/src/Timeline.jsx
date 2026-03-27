@@ -40,6 +40,8 @@ function TimelineCard({ event, onEdit, onDelete }) {
 }
 
 export default function Timeline() {
+  const datePattern = /^(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) (0?[1-9]|[12][0-9]|3[01]), \d{4}$/;
+
   const [timelineEvents, setTimelineEvents] = useState([]);
   const [statusMessage, setStatusMessage] = useState('');
   const [formErrors, setFormErrors] = useState({});
@@ -80,8 +82,8 @@ export default function Timeline() {
 
     if (!date) {
       errors.date = 'Date is required.';
-    } else if (date.length > 40) {
-      errors.date = 'Date must be 40 characters or fewer.';
+    } else if (!datePattern.test(date)) {
+      errors.date = 'Date must use format Mon D, YYYY (example: Apr 8, 2024).';
     }
 
     if (!description) {
