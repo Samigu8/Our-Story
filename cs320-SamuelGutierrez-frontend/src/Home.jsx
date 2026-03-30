@@ -69,7 +69,7 @@ const Home = () => {
               playsInline
               preload="metadata"
             >
-              <source src="/Untitled.mp4" type="video/mp4" />
+              <source src="/Hero Video.mp4" type="video/mp4" />
               Your browser does not support the video tag.
             </video>
 
