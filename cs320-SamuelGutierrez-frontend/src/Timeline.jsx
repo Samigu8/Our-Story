@@ -5,10 +5,17 @@ import { API_URL } from './config';
 function TimelineCard({ event, onEdit, onDelete }) {
   return (
     <div className="bg-white rounded-2xl shadow-md hover:shadow-lg transition-shadow overflow-hidden">
-      {/* Image Placeholder */}
-      <div className="aspect-video bg-gradient-to-br from-pink-200 via-purple-200 to-blue-200 flex items-center justify-center">
-        <Calendar className="w-16 h-16 text-white opacity-60" />
-      </div>
+      {event.imageUrl ? (
+        <img
+          src={event.imageUrl}
+          alt={event.title}
+          className="aspect-video w-full object-cover"
+        />
+      ) : (
+        <div className="aspect-video bg-gradient-to-br from-pink-200 via-purple-200 to-blue-200 flex items-center justify-center">
+          <Calendar className="w-16 h-16 text-white opacity-60" />
+        </div>
+      )}
       
       {/* Card Content */}
       <div className="p-6">
@@ -47,7 +54,9 @@ export default function Timeline() {
   const [formErrors, setFormErrors] = useState({});
   const [isCreating, setIsCreating] = useState(false);
   const [editingId, setEditingId] = useState(null);
-  const [form, setForm] = useState({ title: '', date: '', description: '' });
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [form, setForm] = useState({ title: '', date: '', description: '', imageUrl: '' });
 
   useEffect(() => {
     fetchTimelineEvents();
@@ -92,6 +101,10 @@ export default function Timeline() {
       errors.description = 'Description must be 400 characters or fewer.';
     }
 
+    if (form.imageUrl && form.imageUrl.trim().length > 500) {
+      errors.imageUrl = 'Image URL must be 500 characters or fewer.';
+    }
+
     return errors;
   };
 
@@ -102,10 +115,43 @@ export default function Timeline() {
   };
 
   const resetForm = () => {
-    setForm({ title: '', date: '', description: '' });
+    setForm({ title: '', date: '', description: '', imageUrl: '' });
+    setSelectedImage(null);
+    setIsUploadingImage(false);
     setFormErrors({});
     setIsCreating(false);
     setEditingId(null);
+  };
+
+  const uploadImageToS3 = async (file, folder) => {
+    const presignResponse = await fetch(`${API_URL}/uploads/presign`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        fileName: file.name,
+        contentType: file.type,
+        folder,
+      }),
+    });
+
+    if (!presignResponse.ok) {
+      const message = await parseMessage(presignResponse, 'Unable to prepare image upload.');
+      throw new Error(message);
+    }
+
+    const { uploadUrl, fileUrl } = await presignResponse.json();
+
+    const uploadResponse = await fetch(uploadUrl, {
+      method: 'PUT',
+      headers: { 'Content-Type': file.type },
+      body: file,
+    });
+
+    if (!uploadResponse.ok) {
+      throw new Error('Image upload failed. Please try again.');
+    }
+
+    return fileUrl;
   };
 
   const parseMessage = async (response, fallback) => {
@@ -133,17 +179,24 @@ export default function Timeline() {
       return;
     }
 
-    const requestBody = {
-      title: form.title.trim(),
-      date: form.date.trim(),
-      description: form.description.trim(),
-    };
-
     const isEditMode = editingId !== null;
     const endpoint = isEditMode ? `${API_URL}/timeline/${editingId}` : `${API_URL}/timeline`;
     const method = isEditMode ? 'PUT' : 'POST';
 
     try {
+      let imageUrl = form.imageUrl.trim();
+      if (selectedImage) {
+        setIsUploadingImage(true);
+        imageUrl = await uploadImageToS3(selectedImage, 'timeline');
+      }
+
+      const requestBody = {
+        title: form.title.trim(),
+        date: form.date.trim(),
+        description: form.description.trim(),
+        imageUrl,
+      };
+
       const response = await fetch(endpoint, {
         method,
         headers: { 'Content-Type': 'application/json' },
@@ -159,8 +212,10 @@ export default function Timeline() {
       await fetchTimelineEvents();
       resetForm();
       setStatusMessage(isEditMode ? 'Timeline event updated.' : 'Timeline event added.');
-    } catch {
-      setStatusMessage('Unable to save timeline event right now. Please try again.');
+    } catch (error) {
+      setStatusMessage(error?.message || 'Unable to save timeline event right now. Please try again.');
+    } finally {
+      setIsUploadingImage(false);
     }
   };
 
@@ -172,7 +227,13 @@ export default function Timeline() {
   const startEdit = (event) => {
     setIsCreating(false);
     setEditingId(event.id);
-    setForm({ title: event.title, date: event.date, description: event.description });
+    setForm({
+      title: event.title,
+      date: event.date,
+      description: event.description,
+      imageUrl: event.imageUrl || '',
+    });
+    setSelectedImage(null);
     setFormErrors({});
     setStatusMessage('');
   };
@@ -262,12 +323,30 @@ export default function Timeline() {
                 />
               </label>
               {formErrors.description && <p className="text-red-600" role="alert">{formErrors.description}</p>}
+
+              <label className="text-gray-700">
+                Event Image
+                <input
+                  className="mt-1 w-full rounded-xl border border-gray-300 p-3"
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0] || null;
+                    setSelectedImage(file);
+                    setFormErrors((prev) => ({ ...prev, imageUrl: '' }));
+                  }}
+                />
+              </label>
+              {form.imageUrl && !selectedImage && (
+                <p className="text-sm text-gray-600">Current image is saved. Choose a file only if you want to replace it.</p>
+              )}
+              {formErrors.imageUrl && <p className="text-red-600" role="alert">{formErrors.imageUrl}</p>}
             </div>
 
             <div className="mt-5 flex flex-col sm:flex-row gap-3">
-              <button type="submit" className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-blue-500 text-white px-5 py-2 rounded-full hover:bg-blue-600">
+              <button type="submit" disabled={isUploadingImage} className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-blue-500 text-white px-5 py-2 rounded-full hover:bg-blue-600 disabled:bg-blue-300">
                 <Save className="w-4 h-4" />
-                Save
+                {isUploadingImage ? 'Uploading image...' : 'Save'}
               </button>
               <button type="button" onClick={cancelForm} className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-gray-200 text-gray-700 px-5 py-2 rounded-full hover:bg-gray-300">
                 <X className="w-4 h-4" />
